@@ -10,6 +10,8 @@ class LoginScreen extends StatelessWidget {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
 
+  LoginScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,8 +21,9 @@ class LoginScreen extends StatelessWidget {
           if (state is AuthSuccessState) {
             Navigator.pushReplacementNamed(context, RouteNames.home);
           } else if (state is AuthFailureState) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -31,8 +34,14 @@ class LoginScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                TextField(controller: emailCtrl, decoration: InputDecoration(labelText: "Email")),
-                TextField(controller: passCtrl, decoration: InputDecoration(labelText: "Password")),
+                TextField(
+                  controller: emailCtrl,
+                  decoration: InputDecoration(labelText: "Email"),
+                ),
+                TextField(
+                  controller: passCtrl,
+                  decoration: InputDecoration(labelText: "Password"),
+                ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
@@ -43,9 +52,10 @@ class LoginScreen extends StatelessWidget {
                   child: Text("Login"),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, RouteNames.register),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, RouteNames.register),
                   child: Text("Don't have an account? Register"),
-                )
+                ),
               ],
             ),
           );
@@ -54,4 +64,3 @@ class LoginScreen extends StatelessWidget {
     );
   }
 }
-

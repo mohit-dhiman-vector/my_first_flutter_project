@@ -9,7 +9,10 @@ class ApiService extends BaseApiService {
   ApiService({required this.baseUrl});
 
   @override
-  Future<ApiResult<dynamic>> get(String endpoint, {Map<String, String>? headers}) async {
+  Future<ApiResult<dynamic>> get(
+    String endpoint, {
+    Map<String, String>? headers,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse("$baseUrl/$endpoint"),
@@ -22,7 +25,11 @@ class ApiService extends BaseApiService {
   }
 
   @override
-  Future<ApiResult<dynamic>> post(String endpoint, dynamic body, {Map<String, String>? headers}) async {
+  Future<ApiResult<dynamic>> post(
+    String endpoint,
+    dynamic body, {
+    Map<String, String>? headers,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/$endpoint"),
@@ -36,7 +43,11 @@ class ApiService extends BaseApiService {
   }
 
   @override
-  Future<ApiResult<dynamic>> put(String endpoint, dynamic body, {Map<String, String>? headers}) async {
+  Future<ApiResult<dynamic>> put(
+    String endpoint,
+    dynamic body, {
+    Map<String, String>? headers,
+  }) async {
     try {
       final response = await http.put(
         Uri.parse("$baseUrl/$endpoint"),
@@ -50,7 +61,10 @@ class ApiService extends BaseApiService {
   }
 
   @override
-  Future<ApiResult<dynamic>> delete(String endpoint, {Map<String, String>? headers}) async {
+  Future<ApiResult<dynamic>> delete(
+    String endpoint, {
+    Map<String, String>? headers,
+  }) async {
     try {
       final response = await http.delete(
         Uri.parse("$baseUrl/$endpoint"),
@@ -63,9 +77,7 @@ class ApiService extends BaseApiService {
   }
 
   // Default headers
-  Map<String, String> _defaultHeaders() => {
-    "Content-Type": "application/json",
-  };
+  Map<String, String> _defaultHeaders() => {"Content-Type": "application/json"};
 
   // Global response handler
   ApiResult<dynamic> _processResponse(http.Response response) {

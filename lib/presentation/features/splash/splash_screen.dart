@@ -48,11 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               // App Logo
-              Icon(
-                Icons.flutter_dash,
-                size: 120,
-                color: Colors.white,
-              ),
+              Icon(Icons.flutter_dash, size: 120, color: Colors.white),
 
               const SizedBox(height: 20),
 

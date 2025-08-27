@@ -6,6 +6,8 @@ import 'package:my_first_flutter_project/presentation/features/home/bloc/post_st
 import '../../../../core/base/base_state.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     context.read<PostBloc>().add(LoadPostsEvent());

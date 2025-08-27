@@ -32,8 +32,9 @@ void main() {
   blocTest<PostBloc, BaseState>(
     'emits [LoadingState, PostLoadedState] when fetchPosts succeeds',
     build: () {
-      when(() => mockPostRepository.fetchPosts())
-          .thenAnswer((_) async => ApiResult.success(dummyPosts));
+      when(
+        () => mockPostRepository.fetchPosts(),
+      ).thenAnswer((_) async => ApiResult.success(dummyPosts));
       return postBloc;
     },
     act: (bloc) => bloc.add(LoadPostsEvent()),
@@ -49,14 +50,19 @@ void main() {
   blocTest<PostBloc, BaseState>(
     'emits [LoadingState, ErrorState] when fetchPosts fails',
     build: () {
-      when(() => mockPostRepository.fetchPosts())
-          .thenAnswer((_) async => ApiResult.failure("Failed to load posts"));
+      when(
+        () => mockPostRepository.fetchPosts(),
+      ).thenAnswer((_) async => ApiResult.failure("Failed to load posts"));
       return postBloc;
     },
     act: (bloc) => bloc.add(LoadPostsEvent()),
     expect: () => [
       isA<LoadingState>(),
-      isA<ErrorState>().having((s) => s.message, "error message", "Failed to load posts"),
+      isA<ErrorState>().having(
+        (s) => s.message,
+        "error message",
+        "Failed to load posts",
+      ),
     ],
     verify: (_) {
       verify(() => mockPostRepository.fetchPosts()).called(1);

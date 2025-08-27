@@ -12,16 +12,15 @@ import 'data/repositories/post_repository.dart';
 void main() {
   // Initialize core services
   final authApiService = ApiService(baseUrl: "https://reqres.in/api/");
-  final postApiService = ApiService(baseUrl: "https://jsonplaceholder.typicode.com");
+  final postApiService = ApiService(
+    baseUrl: "https://jsonplaceholder.typicode.com",
+  );
 
   // Create repositories
   final authRepository = AuthRepository(authApiService);
   final postRepository = PostRepository(postApiService);
 
-  runApp(MyApp(
-    authRepository: authRepository,
-    postRepository: postRepository,
-  ));
+  runApp(MyApp(authRepository: authRepository, postRepository: postRepository));
 }
 
 class MyApp extends StatelessWidget {
@@ -38,12 +37,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) => AuthBloc(authRepository),
-        ),
-        BlocProvider(
-          create: (_) => PostBloc(postRepository),
-        ),
+        BlocProvider(create: (_) => AuthBloc(authRepository)),
+        BlocProvider(create: (_) => PostBloc(postRepository)),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -21,8 +21,9 @@ class RegisterScreen extends StatelessWidget {
           if (state is AuthSuccessState) {
             Navigator.pushReplacementNamed(context, RouteNames.home);
           } else if (state is AuthFailureState) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -33,8 +34,14 @@ class RegisterScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                TextField(controller: emailCtrl, decoration: InputDecoration(labelText: "Email")),
-                TextField(controller: passCtrl, decoration: InputDecoration(labelText: "Password")),
+                TextField(
+                  controller: emailCtrl,
+                  decoration: InputDecoration(labelText: "Email"),
+                ),
+                TextField(
+                  controller: passCtrl,
+                  decoration: InputDecoration(labelText: "Password"),
+                ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
