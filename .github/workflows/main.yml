@@ -2,15 +2,15 @@ name: "Build & Release"
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  # -------------------------
-  # Android integration tests
-  # -------------------------
-  android-tests:
+  build:
+    name: Build & Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,13 +25,25 @@ jobs:
       - name: Flutter Setup
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
           architecture: x64
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run Integration Tests on Emulator
+      - name: Auto format the dart code
+        run: dart format .
+
+      - name: Verify the dart code is formatted
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze the dart code
+        run: flutter analyze --fatal-warnings
+
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses
+
+      - name: Run Integration Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
@@ -48,43 +60,9 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+      - name: Push to Releases
+        uses: ncipollo/release-action@v1
         with:
-          name: android-apk
-          path: build/app/outputs/apk/release/*.apk
-
-  # -------------------------
-  # iOS build
-  # -------------------------
-  ios-build:
-    runs-on: macos-latest
-    needs: android-tests
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Flutter Setup
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          architecture: x64
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build iOS
-        run: |
-          flutter build ios --no-codesign
-          cd build/ios/iphoneos
-          mkdir Payload
-          cd Payload
-          ln -s ../Runner.app
-          cd ..
-          zip -r app.ipa Payload  
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ios-ipa
-          path: build/ios/iphoneos/app.ipa
+          artifacts: "build/app/outputs/apk/release/*"
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
