@@ -40,18 +40,33 @@ jobs:
       - name: Analyze the dart code
         run: flutter analyze --fatal-warnings
 
-      - name: Run tests
+      - name: Accept Android Licenses
+        run: yes | flutter doctor --android-licenses
+
+      - name: Set up Android Emulator
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;x86_64"
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-34;google_apis;x86_64" --device "pixel"
+          nohup emulator -avd test -no-audio -no-window -gpu swiftshader_indirect &
+          adb wait-for-device
+          adb shell input keyevent 82
+          sleep 30 # wait for emulator to fully boot
+
+      - name: Run tests on Emulator
         run: flutter test
 
-      - run: flutter build apk --release --split-per-abi
-      - run: |
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build iOS
+        run: |
           flutter build ios --no-codesign
           cd build/ios/iphoneos
           mkdir Payload
           cd Payload
           ln -s ../Runner.app
           cd ..
-          zip -r app.ipa Payload
+          zip -r app.ipa Payload  
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1
@@ -59,11 +74,3 @@ jobs:
           artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/app.ipa"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
-
-
-
-
-
-
-# push to master, main, develop
-# pull request on main master
