@@ -52,13 +52,9 @@ jobs:
           profile: Nexus 6
           emulator-options: -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            adb devices
-            adb wait-for-device
-            adb shell getprop sys.boot_completed
-            flutter drive \
-              --driver=test_driver/integration_test.dart \
-              --target=integration_test/app_test.dart
+          script: flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/app_test.dart
 
       - name: Build APK
         run: flutter build apk --release --split-per-abi
