@@ -61,7 +61,7 @@ jobs:
           echo ">>> Listing available AVDs:"
           $ANDROID_HOME/emulator/emulator -list-avds || exit 1
           echo ">>> Starting emulator:"
-          $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader_indirect &
+          $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window -gpu swiftshader_indirect -accel off &
           EMU_PID=$!
           echo ">>> Waiting for emulator to boot (PID: $EMU_PID)..."
           adb wait-for-device
