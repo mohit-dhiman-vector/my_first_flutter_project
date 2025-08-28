@@ -52,10 +52,12 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --update || exit 1
           echo ">>> Installed packages:"
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list || exit 1
-          echo ">>> Ensuring emulator, platform-tools, and system image are present:"
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" || exit 1
+          echo ">>> Ensuring emulator, platform-tools, and ARM64 system image are present:"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "emulator" "system-images;android-34;google_apis;arm64-v8a" || exit 1
+          echo ">>> Deleting previously created test AVD, if exists:"
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager delete avd -n test || true
           echo ">>> Creating new AVD:"
-          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-34;google_apis;x86_64" --device "pixel" --force || exit 1
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n test -k "system-images;android-34;google_apis;arm64-v8a" --device "pixel" --force || exit 1
           echo ">>> Listing available AVDs:"
           $ANDROID_HOME/emulator/emulator -list-avds || exit 1
           echo ">>> Starting emulator:"
