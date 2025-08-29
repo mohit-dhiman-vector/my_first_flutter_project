@@ -50,38 +50,27 @@ jobs:
       - name: Analyze the dart code
         run: flutter analyze --fatal-warnings
 
-      # Install Android SDK tools
-      - name: Install Android SDK
-        run: |
-          brew install --cask android-sdk
-          echo "export ANDROID_HOME=/usr/local/share/android-sdk" >> $GITHUB_ENV
-          echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH" >> $GITHUB_ENV
-          mkdir -p $ANDROID_HOME/cmdline-tools/latest
-          curl -s https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          rm cmdline-tools.zip
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      # Accept licenses & install required SDK components
-      - name: Install SDK packages
-        run: |
-          yes | sdkmanager --licenses
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2" \
-            "system-images;android-33;google_apis_playstore;x86_64" \
-            "emulator"
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses
 
-      # Start emulator using the official action
-      - name: Run Emulator
+      - name: Install required SDK packages
+        run: sdkmanager --install \
+          "platform-tools" \
+          "platforms;android-33" \
+          "build-tools;33.0.2" \
+          "system-images;android-33;google_apis_playstore;x86_64" \
+          "emulator"
+
+      - name: Start emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
-          target: google_apis_playstore
           arch: x86_64
-          profile: pixel_5
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect
+          target: google_apis_playstore
+          profile: pixel_6
           script: ./gradlew connectedCheck
 
       - name: Build APK
