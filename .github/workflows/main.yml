@@ -96,16 +96,22 @@ jobs:
             ls -la build/app/outputs/apk/ || echo "apk directory not found"
             
             echo "=== Installing Flutter app ==="
-            # Try different methods to install the APK
+            # Find and install the APK
+            APK_PATH=""
             if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
-              echo "Installing debug APK from flutter-apk directory"
-              adb install -r build/app/outputs/flutter-apk/app-debug.apk
+                APK_PATH="build/app/outputs/flutter-apk/app-debug.apk"
+                echo "Found APK in flutter-apk directory"
             elif [ -f "build/app/outputs/apk/debug/app-debug.apk" ]; then
-              echo "Installing debug APK from apk/debug directory"
-              adb install -r build/app/outputs/apk/debug/app-debug.apk
+                APK_PATH="build/app/outputs/apk/debug/app-debug.apk"
+                echo "Found APK in apk/debug directory"
+            fi
+            
+            if [ -n "$APK_PATH" ]; then
+                echo "Installing APK: $APK_PATH"
+                adb install -r "$APK_PATH"
             else
-              echo "Trying flutter install command"
-              flutter install --debug
+                echo "No APK found, trying flutter install command"
+                flutter install --debug
             fi
             
             echo "=== Verifying app installation ==="
