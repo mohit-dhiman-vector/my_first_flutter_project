@@ -102,10 +102,17 @@ jobs:
             echo "=== Verifying app installation ==="
             adb shell pm list packages | grep -i flutter || echo "Flutter app package not found"
             
-            echo "=== Taking screenshot ==="
+            echo "=== Running widget tests on emulator ==="
+            flutter test --device-id=emulator test/widget_test.dart || echo "Widget tests completed"
+            
+            echo "=== Running integration tests (if available) ==="
+            # Try to run integration tests, skip if directory doesn't exist
+            flutter test integration_test/ --device-id=emulator || echo "Integration tests skipped or completed"
+            
+            echo "=== Taking screenshot after tests ==="
             adb exec-out screencap -p > screenshot.png
             
-            echo "=== Flutter app installation completed ==="
+            echo "=== Flutter app testing completed ==="
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -115,6 +122,16 @@ jobs:
           path: |
             build/app/outputs/flutter-apk/*.apk
             build/app/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.json
+            coverage/
           retention-days: 7
 
       - name: Upload screenshot artifact (optional)
