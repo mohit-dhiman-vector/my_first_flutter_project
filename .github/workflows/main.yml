@@ -50,53 +50,39 @@ jobs:
       - name: Analyze the dart code
         run: flutter analyze --fatal-warnings
 
-      # Install Android SDK packages & emulator system image
-      - name: Install Android SDK Packages
+      # Install Android SDK tools
+      - name: Install Android SDK
         run: |
-          echo "y" | sdkmanager --licenses
+          brew install --cask android-sdk
+          echo "export ANDROID_HOME=/usr/local/share/android-sdk" >> $GITHUB_ENV
+          echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH" >> $GITHUB_ENV
+          mkdir -p $ANDROID_HOME/cmdline-tools/latest
+          curl -s https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip -o cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          rm cmdline-tools.zip
+
+      # Accept licenses & install required SDK components
+      - name: Install SDK packages
+        run: |
+          yes | sdkmanager --licenses
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-${{ env.API_LEVEL }}" \
-            "build-tools;${{ env.ANDROID_BUILD_TOOLS_VERSION }}" \
-            "system-images;android-${{ env.API_LEVEL }};${{ env.ANDROID_TARGET }};${{ env.ANDROID_ARCH }}" \
-            "emulator" 
+            "platforms;android-33" \
+            "build-tools;33.0.2" \
+            "system-images;android-33;google_apis_playstore;x86_64" \
+            "emulator"
 
-      # Create emulator
-      - name: Create AVD
-        run: |
-          echo "no" | avdmanager create avd \
-            --name $EMULATOR_NAME \
-            --package "system-images;android-${API_LEVEL};${ANDROID_TARGET};${ANDROID_ARCH}" \
-            --abi ${ANDROID_ARCH} \
-            --device "pixel"
-
-      # Start emulator (headless, no audio/snapshot)
-      - name: Start Emulator
-        run: |
-          nohup $ANDROID_HOME/emulator/emulator -avd $EMULATOR_NAME -no-snapshot -noaudio -no-boot-anim -camera-back none -gpu swiftshader_indirect &
-          adb wait-for-device
-          adb shell input keyevent 82
-
-      - name: Wait for emulator to boot
-        run: |
-          adb devices
-          # Loop until boot complete
-          boot_completed=""
-          until [[ "$boot_completed" == "1" ]]; do
-            sleep 5
-            boot_completed=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
-            echo "Boot status: $boot_completed"
-          done
-          adb shell settings put global window_animation_scale 0 &
-          adb shell settings put global transition_animation_scale 0 &
-          adb shell settings put global animator_duration_scale 0 &
-
-      # Run Flutter integration tests
-      - name: Run Integration Tests
-        run: |
-          flutter drive \
-            --driver=test_driver/integration_test.dart \
-            --target=integration_test/app_test.dart        
+      # Start emulator using the official action
+      - name: Run Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis_playstore
+          arch: x86_64
+          profile: pixel_5
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect
+          script: ./gradlew connectedCheck
 
       - name: Build APK
         run: flutter build apk --release --split-per-abi
