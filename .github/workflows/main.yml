@@ -90,13 +90,41 @@ jobs:
             echo "=== Building Flutter APK ==="
             flutter build apk --debug
             
+            echo "=== Checking build outputs ==="
+            ls -la build/app/outputs/
+            ls -la build/app/outputs/flutter-apk/ || echo "flutter-apk directory not found"
+            ls -la build/app/outputs/apk/ || echo "apk directory not found"
+            
             echo "=== Installing Flutter app ==="
-            flutter install
+            # Try different methods to install the APK
+            if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+              echo "Installing debug APK from flutter-apk directory"
+              adb install -r build/app/outputs/flutter-apk/app-debug.apk
+            elif [ -f "build/app/outputs/apk/debug/app-debug.apk" ]; then
+              echo "Installing debug APK from apk/debug directory"
+              adb install -r build/app/outputs/apk/debug/app-debug.apk
+            else
+              echo "Trying flutter install command"
+              flutter install --debug
+            fi
+            
+            echo "=== Verifying app installation ==="
+            adb shell pm list packages | grep -i flutter || echo "Flutter app package not found"
             
             echo "=== Taking screenshot ==="
             adb exec-out screencap -p > screenshot.png
             
             echo "=== Flutter app installation completed ==="
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debug-apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/apk/debug/*.apk
+          retention-days: 7
 
       - name: Upload screenshot artifact (optional)
         uses: actions/upload-artifact@v4
