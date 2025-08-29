@@ -10,10 +10,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     env:
       ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 300
+      ANDROID_API_LEVEL: 30
+      ANDROID_TARGET: google_apis
+      ANDROID_ARCH: x86_64
+      ANDROID_PROFILE: Nexus 6
 
     steps:
       - name: Checkout code
@@ -28,6 +32,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
 
@@ -46,92 +51,52 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.ANDROID_API_LEVEL }}
 
-      - name: Accept Android SDK licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: ${{ env.ANDROID_TARGET }}
+          arch: ${{ env.ANDROID_ARCH }}
+          profile: ${{ env.ANDROID_PROFILE }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
 
-      - name: Install Android SDK components
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;x86_64"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "emulator"
-          
-          # Verify installations
-          ls -la $ANDROID_HOME/platform-tools/
-          ls -la $ANDROID_HOME/emulator/
-
-      - name: Create Android emulator
-        run: |
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd \
-            --force \
-            --name test_emulator \
-            --abi google_apis/x86_64 \
-            --package 'system-images;android-34;google_apis;x86_64' \
-            --device "Nexus 6"
-
-      - name: Start Android emulator
-        run: |
-          # Start the emulator in the background
-          nohup $ANDROID_HOME/emulator/emulator -avd test_emulator -no-snapshot -no-window -no-boot-anim -no-audio -gpu swiftshader_indirect -wipe-data &
-
-      - name: Wait for emulator to boot
-        run: |
-          # Start adb server
-          $ANDROID_HOME/platform-tools/adb start-server
-          
-          # Wait for device to appear
-          echo "Waiting for emulator to start..."
-          timeout 300 bash -c 'until $ANDROID_HOME/platform-tools/adb devices | grep -q "emulator.*device"; do 
-            echo "Waiting for emulator..."
-            sleep 5
-          done'
-          
-          # Wait for boot to complete
-          echo "Waiting for emulator to boot completely..."
-          timeout 300 bash -c 'until $ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null | grep -q "1"; do 
-            echo "Boot in progress..."
-            sleep 10
-          done'
-          
-          # Additional wait for system to stabilize
-          echo "Waiting for system to stabilize..."
-          sleep 30
-          
-          # Verify emulator is ready
-          $ANDROID_HOME/platform-tools/adb devices
-          echo "Emulator is ready!"
-
-      - name: Build Flutter app for Android
-        run: flutter build apk --debug
-
-      - name: Debug emulator status
-        run: |
-          echo "=== ADB Status ==="
-          $ANDROID_HOME/platform-tools/adb devices -l
-          echo "=== Running processes ==="
-          ps aux | grep emulator || true
-          echo "=== Emulator logs (last 20 lines) ==="
-          tail -20 /tmp/emulator_*.log 2>/dev/null || echo "No emulator logs found"
-
-      - name: Install and run app on emulator
-        run: |
-          # Ensure we have a device connected
-          if ! $ANDROID_HOME/platform-tools/adb devices | grep -q "emulator.*device"; then
-            echo "Error: No emulator device found"
-            exit 1
-          fi
-          
-          flutter install
-          # Optional: You can also run integration tests here
-          # flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart
-
-      - name: Take screenshot (optional)
-        run: |
-          $ANDROID_HOME/platform-tools/adb exec-out screencap -p > screenshot.png
+      - name: Run Flutter app on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: ${{ env.ANDROID_TARGET }}
+          arch: ${{ env.ANDROID_ARCH }}
+          profile: ${{ env.ANDROID_PROFILE }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            echo "=== Emulator started successfully ==="
+            adb devices
+            
+            echo "=== Building Flutter APK ==="
+            flutter build apk --debug
+            
+            echo "=== Installing Flutter app ==="
+            flutter install
+            
+            echo "=== Taking screenshot ==="
+            adb exec-out screencap -p > screenshot.png
+            
+            echo "=== Flutter app installation completed ==="
 
       - name: Upload screenshot artifact (optional)
         uses: actions/upload-artifact@v4
