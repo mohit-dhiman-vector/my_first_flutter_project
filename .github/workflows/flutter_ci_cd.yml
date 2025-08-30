@@ -178,3 +178,4 @@ jobs:
           echo "- Test the debug builds on your devices" >> $GITHUB_STEP_SUMMARY
           echo "- Review test coverage results" >> $GITHUB_STEP_SUMMARY
           echo "- Check code formatting and linting issues if any" >> $GITHUB_STEP_SUMMARY
+
