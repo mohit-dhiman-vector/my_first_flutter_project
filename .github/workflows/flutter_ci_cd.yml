@@ -56,13 +56,6 @@ jobs:
       - name: Run unit tests
         run: flutter test --coverage
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: coverage/lcov.info
-          name: flutter-coverage
-          fail_ci_if_error: false
-
 
   # Android Build Jobs
   build_android_debug:
@@ -99,6 +92,25 @@ jobs:
           name: android-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        if: ${{ secrets.FIREBASE_APP_ID && secrets.FIREBASE_TOKEN }}
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_TOKEN }}
+          groups: testers
+          file: build/app/outputs/flutter-apk/app-debug.apk
+          releaseNotes: |
+            🚀 Debug Build - ${{ github.sha }}
+            
+            📝 Changes:
+            - Branch: ${{ github.ref_name }}
+            - Commit: ${{ github.event.head_commit.message }}
+            - Author: ${{ github.actor }}
+            
+            🔗 View changes: ${{ github.event.compare }}
+
 
 
   # iOS Build Jobs
@@ -142,7 +154,6 @@ jobs:
           name: ios-debug-ipa
           path: ios-debug.ipa
           retention-days: 30
-
 
 
   # Build Summary
