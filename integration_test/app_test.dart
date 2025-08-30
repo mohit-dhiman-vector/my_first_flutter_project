@@ -7,7 +7,9 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('App Integration Tests', () {
-    testWidgets('App launches and displays main screen', (WidgetTester tester) async {
+    testWidgets('App launches and displays main screen', (
+      WidgetTester tester,
+    ) async {
       // Start the app
       app.main();
       await tester.pumpAndSettle();
@@ -15,7 +17,7 @@ void main() {
       // Verify that the app launches successfully
       // Adjust these expectations based on your actual app content
       expect(find.byType(MaterialApp), findsOneWidget);
-      
+
       // Add more specific tests based on your app's UI
       // For example, if you have a login screen:
       // expect(find.text('Login'), findsOneWidget);
@@ -28,7 +30,7 @@ void main() {
 
       // Example: Test navigation if you have multiple screens
       // This is just a template - adjust based on your actual app flow
-      
+
       // If you have a button that navigates to another screen:
       // await tester.tap(find.text('Go to Next Screen'));
       // await tester.pumpAndSettle();

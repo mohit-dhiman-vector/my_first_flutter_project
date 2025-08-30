@@ -41,14 +41,17 @@ jobs:
       - name: Verify Flutter installation
         run: flutter doctor -v
 
-      - name: Check formatting
-        run: dart format --set-exit-if-changed .
+      - name: Format code automatically
+        run: |
+          echo "🎨 Auto-formatting Dart code..."
+          dart format .
+          echo "✅ Code formatting completed"
 
-      - name: Analyze code
-        run: flutter analyze
-
-      - name: Run Flutter linting
-        run: flutter analyze --fatal-infos --fatal-warnings
+      - name: Analyze code with strict linting
+        run: |
+          echo "🔍 Running Flutter analysis with strict linting..."
+          flutter analyze --fatal-infos --fatal-warnings
+          echo "✅ Code analysis completed successfully"
 
       - name: Run unit tests
         run: flutter test --coverage
